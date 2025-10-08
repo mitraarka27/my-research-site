@@ -64,7 +64,30 @@ jobs:
             --cache-control "public, max-age=31536000, immutable" \
             --metadata-directive REPLACE
 
-      - name: Invalidate CloudFront
+      - name: Who am I
+        run: aws sts get-caller-identity
+
+      - name: Debug IDs
         run: |
-          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
-            --paths "/*.html" "/index.html" "/404.html" "/sitemap*.xml" "/rss*.xml" "/robots.txt"
+          echo "Bucket=$S3_BUCKET"
+          echo "Distribution ID=$DISTRIBUTION_ID"
+
+      - name: Validate distribution ID
+        run: aws cloudfront get-distribution --id "$DISTRIBUTION_ID"
+
+      # OPTIONAL fallback by alias (set CF_ALIAS_PROD secret = arka-mitra-research.com)
+      - name: Fallback: resolve CF ID by alias if missing/invalid
+        if: failure() || env.DISTRIBUTION_ID == ''
+        run: |
+          ALIAS="${{ secrets.CF_ALIAS_PROD }}"
+          ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${ALIAS}')].Id | [0]" \
+            --output text)
+          echo "Resolved: $ID"
+          test "$ID" != "None" -a -n "$ID"
+          echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
+              --paths "/*.html" "/index.html" "/404.html" "/sitemap*.xml" "/rss*.xml" "/robots.txt"
+
