@@ -41,6 +41,13 @@ jobs:
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
           echo "CF_ALIAS=${{ secrets.CF_ALIAS_PROD }}" >> $GITHUB_ENV
 
+      # Select PROD env for manual runs (workflow_dispatch)
+      - name: Select PROD env (manual run)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
+          echo "CF_ALIAS=${{ secrets.CF_ALIAS_PROD }}" >> $GITHUB_ENV
+
       - name: Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
