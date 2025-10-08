@@ -2,10 +2,10 @@ name: deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]      # deploy PROD on push to main
     tags: [ "v*" ]
   pull_request:
-    branches: [ main ]
+    branches: [ main ]      # deploy STAGING on PRs
   workflow_dispatch:
 
 jobs:
@@ -28,19 +28,17 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Select env -> export S3 bucket and initial (optional) CF distribution ID
+      # Select environment: set S3 bucket and CF alias
       - name: Select STAGING env (PRs)
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_STAGING }}" >> $GITHUB_ENV
-          echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_STAGING }}" >> $GITHUB_ENV
           echo "CF_ALIAS=${{ secrets.CF_ALIAS_STAGING }}" >> $GITHUB_ENV
 
       - name: Select PROD env (push to main / tags)
         if: ${{ github.event_name == 'push' }}
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
-          echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_PROD }}" >> $GITHUB_ENV
           echo "CF_ALIAS=${{ secrets.CF_ALIAS_PROD }}" >> $GITHUB_ENV
 
       - name: Configure AWS creds
@@ -50,33 +48,35 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      - name: Who am I
+      - name: Verify AWS account
         run: aws sts get-caller-identity
 
       - name: Debug env
         run: |
           echo "Bucket=$S3_BUCKET"
-          echo "Distribution ID (pre)=$DISTRIBUTION_ID"
           echo "Alias=$CF_ALIAS"
 
-      # Resolve CF distribution ID by alias if not provided as a secret
-      - name: Ensure CloudFront distribution ID
+      - name: Resolve CloudFront distribution ID by alias
         run: |
-          if [ -z "${DISTRIBUTION_ID}" ]; then
-            if [ -z "${CF_ALIAS}" ]; then
-              echo "DISTRIBUTION_ID is empty and CF_ALIAS not set. Set either DISTRIBUTION_ID_* secret or CF_ALIAS_* secret."
-              exit 1
-            fi
-            ID=$(aws cloudfront list-distributions \
-              --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${CF_ALIAS}')].Id | [0]" \
-              --output text)
-            echo "Resolved ID: $ID"
-            if [ "$ID" = "None" ] || [ -z "$ID" ]; then
-              echo "Could not resolve CloudFront distribution for alias: $CF_ALIAS"
-              exit 1
-            fi
-            echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
+          set -euo pipefail
+          if [ -z "${CF_ALIAS:-}" ]; then
+            echo "CF_ALIAS not set. Add CF_ALIAS_PROD / CF_ALIAS_STAGING repo secrets."
+            exit 1
           fi
+          ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${CF_ALIAS}')].Id | [0]" \
+            --output text)
+          if [ "$ID" = "None" ] || [ -z "$ID" ]; then
+            echo "Could not find CloudFront distribution for alias: $CF_ALIAS"
+            aws cloudfront list-distributions --output table || true
+            exit 1
+          fi
+          ID="$(echo "$ID" | tr -d '[:space:]')"
+          echo "Resolved distribution ID: $ID"
+          echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
+
+      - name: Confirm distribution exists
+        run: aws cloudfront get-distribution --id "$DISTRIBUTION_ID"
 
       - name: Upload HTML/XML/TXT (short cache)
         run: |
