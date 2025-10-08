@@ -56,22 +56,25 @@ jobs:
           echo "Bucket=$S3_BUCKET"
           echo "Alias=$CF_ALIAS"
 
-      - name: Resolve CloudFront distribution ID by alias
+      - name: Resolve CloudFront distribution ID by alias (jq)
+        shell: bash
         run: |
-          set -euo pipefail
+          set -eo pipefail
           if [ -z "${CF_ALIAS:-}" ]; then
-            echo "CF_ALIAS not set. Add CF_ALIAS_PROD / CF_ALIAS_STAGING repo secrets."
+            echo "CF_ALIAS not set. Add CF_ALIAS_PROD / CF_ALIAS_STAGING secrets."
             exit 1
           fi
-          ID=$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${CF_ALIAS}')].Id | [0]" \
-            --output text)
-          if [ "$ID" = "None" ] || [ -z "$ID" ]; then
+          ID=$(aws cloudfront list-distributions --output json | jq -r '
+            (.DistributionList.Items // [])
+            | map(select(.Aliases.Items != null)
+                  | select(.Aliases.Items | index(env.CF_ALIAS)))
+            | .[0].Id // empty
+          ')
+          if [ -z "$ID" ]; then
             echo "Could not find CloudFront distribution for alias: $CF_ALIAS"
             aws cloudfront list-distributions --output table || true
             exit 1
           fi
-          ID="$(echo "$ID" | tr -d '[:space:]')"
           echo "Resolved distribution ID: $ID"
           echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
 
