@@ -1,0 +1,84 @@
+---
+import Base from "../../layouts/base.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("projects");
+  return entries.map((entry) => ({
+    params: { slug: entry.slug }, // slug = filename without extension
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+
+// Render the MD/MDX file to get the compiled component + metadata
+const { Content, headings } = await entry.render();
+const data = entry.data;
+
+// Helper to format frontmatter date that may be string or Date
+function fmtDate(d: string | Date) {
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return String(d);
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+}
+---
+<Base
+  title={data.title}
+  description={data.abstract}
+  ogImage={data.cover}
+  type="article"
+>
+  <article class="prose prose-zinc max-w-3xl mx-auto py-10">
+  <header class="mb-8">
+    <h1 class="mb-2">{data.title}</h1>
+
+    <p class="text-sm text-zinc-500">
+      {data.date && (
+        <time datetime={new Date(data.date as any).toISOString()}>
+          {fmtDate(data.date as any)}
+        </time>
+      )}
+      {data.status ? ` · ${data.status}` : ""}
+      {data.tags?.length ? ` · ${data.tags.join(", ")}` : ""}
+    </p>
+
+    {data.links?.length ? (
+      <ul class="mt-2 flex flex-wrap gap-3 text-sm">
+        {data.links.map((l) => (
+          <li><a class="underline" href={l.href} rel="noopener noreferrer">{l.label}</a></li>
+        ))}
+      </ul>
+    ) : null}
+
+  {data.cover && (
+    <figure class="mt-6">
+      <img src={data.cover} alt={data.title} class="rounded-2xl" />
+      {data.coverCaption && (
+        <figcaption class="text-sm text-zinc-500 mt-2 text-center">
+          <em>{data.coverCaption}</em>
+        </figcaption>
+      )}
+    </figure>
+  )}
+
+    {data.abstract ? <p class="mt-6 text-zinc-700">{data.abstract}</p> : null}
+  </header>
+
+
+    <Content />
+
+    {headings?.length ? (
+      <aside class="mt-12 border-t pt-6">
+        <h2 class="text-base font-semibold mb-2">On this page</h2>
+        <ul class="text-sm space-y-1">
+          {headings.map((h) => (
+            <li style={{ marginLeft: `${Math.max(0, (h.depth - 2) * 12)}px` }}>
+              <a href={`#${h.slug}`} class="underline">{h.text}</a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    ) : null}
+  </article>
+</Base>

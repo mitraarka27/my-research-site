@@ -1,0 +1,35 @@
+---
+const links = [
+  { href: "#about", label: "About" },
+  { href: "#resume", label: "Resume" },
+  { href: "#research", label: "Research" },
+  { href: "#blog", label: "Research Blog" },
+];
+---
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg backdrop-blur-sm bg-opacity-95">
+  <div class="container-x">
+    <div class="flex justify-between h-16">
+      <a href="#hero" class="flex-shrink-0 flex items-center text-xl font-bold text-gray-900 hover:text-blue-700 transition">
+        A.M. Research
+      </a>
+      <div class="hidden md:flex items-center space-x-8">
+        {links.map(l => (
+          <a href={l.href} class="text-gray-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition">
+            {l.label}
+          </a>
+        ))}
+        <a href="/resume.pdf" class="btn-primary text-sm">Download Resume</a>
+      </div>
+      {/* Mobile */}
+      <details class="md:hidden flex items-center">
+        <summary class="list-none cursor-pointer px-3 py-2 rounded-md border border-gray-300 text-sm">Menu</summary>
+        <div class="absolute right-4 top-16 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-2 space-y-1">
+          {links.map(l => (
+            <a href={l.href} class="block px-3 py-2 rounded-md text-sm hover:bg-gray-50">{l.label}</a>
+          ))}
+          <a href="/resume.pdf" class="btn-primary w-full justify-center">Download Resume</a>
+        </div>
+      </details>
+    </div>
+  </div>
+</nav>

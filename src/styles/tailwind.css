@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Bright, roomy base */
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap');
+  html { @apply scroll-smooth; }
+  body { font-family: Inter, ui-sans-serif, system-ui; @apply bg-[#f6f7fb] text-gray-900 antialiased; }
+  a { @apply text-blue-700 hover:text-blue-800 transition-colors; }
+}
+
+/* Opinionated layout utilities */
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12; }
+  .section-anchor { scroll-margin-top: 6rem; } /* fixed header offset */
+
+  /* Banded page stripes */
+  .band       { @apply w-full py-16 sm:py-20; }
+  .band-plain { @apply band bg-white; }
+  .band-alt   { @apply band bg-[#f6f7fb]; }
+  .band-accent{ @apply band bg-gradient-to-b from-blue-50 via-blue-100/60 to-blue-50; }
+
+  /* Loud section shells */
+  .silo { @apply relative rounded-3xl bg-white shadow-[0_30px_70px_-25px_rgba(0,0,0,0.25)] ring-1 ring-black/5 p-10 sm:p-12; }
+  .silo-alt { @apply relative rounded-3xl bg-slate-50 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.2)] ring-1 ring-black/5 p-10 sm:p-12; }
+
+  /* Visual topper */
+  .capline { @apply h-1.5 w-24 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-fuchsia-600 mb-5; }
+  .title-xl { @apply text-4xl sm:text-5xl font-extrabold tracking-tight mb-6; }
+  .subtitle { @apply text-lg sm:text-xl text-gray-700; }
+
+  /* CTA buttons */
+  .btn { @apply inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold transition; }
+  .btn-primary { @apply btn bg-gray-900 text-white shadow-lg hover:bg-gray-800; }
+  .btn-ghost  { @apply btn bg-white text-gray-900 border border-gray-300 hover:bg-gray-50; }
+
+  /* Timeline with strong spine */
+  .timeline { @apply relative border-l-4 border-blue-600/80 ml-5 pl-8 space-y-12; }
+  .dot { @apply relative; }
+  .dot::before {
+    content: ""; position: absolute; left: -1.85rem; top: .45rem;
+    width: 1rem; height: 1rem; border-radius: 9999px;
+    background: #1e40af; box-shadow: 0 0 0 5px #fff;
+  }
+}
+
+/* Hero overlap polish */
+.hero-cover { height: 17rem; }
+@media (min-width: 640px) {
+  .hero-cover { height: 20rem; }
+}

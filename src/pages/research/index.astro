@@ -1,0 +1,28 @@
+---
+import Base from "@/layouts/Base.astro";
+import { getCollection } from "astro:content";
+
+const projects = await getCollection("projects", ({ data }) => !!data.title);
+projects.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+---
+
+<Base title="Research" description="Past and ongoing research projects.">
+  <main class="max-w-5xl mx-auto py-10">
+    <h1 class="text-3xl font-semibold mb-6">Research</h1>
+    <ul class="grid md:grid-cols-2 gap-6">
+      {projects.map((p) => (
+        <li class="border rounded-2xl p-5 hover:shadow-sm transition">
+          <a href={`/research/${p.slug}`}>
+            {p.data.cover ? <img src={p.data.cover} alt="" class="rounded-xl mb-4" /> : null}
+            <h2 class="text-xl font-medium mb-1">{p.data.title}</h2>
+            <p class="text-sm text-zinc-500 mb-2">
+              {new Date(p.data.date).toLocaleDateString(undefined, { year:"numeric", month:"short" })}
+              {p.data.status ? ` · ${p.data.status}` : ""}
+            </p>
+            {p.data.abstract ? <p class="text-zinc-700 line-clamp-3">{p.data.abstract}</p> : null}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </main>
+</Base>

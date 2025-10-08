@@ -1,0 +1,291 @@
+---
+const COVER = "/images/cover.jpg";
+const AVATAR = "/images/avatar.jpg";
+const RESUME = "/resume.pdf";
+
+const SOCIAL_TABS = [
+  { label: "ORCID", href: "https://orcid.org/0000-0001-9835-7507" },
+  { label: "ResearchGate", href: "https://www.researchgate.net/profile/Arka-Mitra-4" },
+  { label: "Google Scholar", href: "https://scholar.google.com/citations?user=YfFOdB0AAAAJ&hl=en" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/mitra-arka/" },
+  { label: "GitHub", href: "https://github.com/mitraarka27" },
+];
+
+const recent = [
+  {
+    tag: "Technical Report",
+    title: "Regime Characterization of Offshore Wind Resource using SOMs",
+    org: "OSTI 2589309 · October 2025",
+    blurb:
+      "Self-Organizing Maps reveal persistent wind regimes and transitions in California WEAs, informing siting risk and operations.",
+    href: "https://doi.org/10.2172/2589309",
+  },
+  {
+    tag: "Journal Article",
+    title: "CERES SYN1deg vs ARM ENA: Radiative Flux Profile Comparison",
+    org: "Journal of Climate · September 2025",
+    blurb:
+      "Satellite–site comparison quantifies biases and vertical profile differences to sharpen radiation budget evaluation.",
+    href: "https://journals.ametsoc.org/view/journals/clim/aop/JCLI-D-24-0633.1/JCLI-D-24-0633.1.xml",
+  },
+  {
+    tag: "Preprint",
+    title: "Locating the Optimal Offshore Wind Resource",
+    org: "Wind Energy Science (preprint) · April 2025",
+    blurb:
+      "Geospatial and wake modeling pipeline for site optimization across California WEAs; integrates cost and production metrics.",
+    href: "https://wes.copernicus.org/preprints/wes-2025-55/",
+  },
+];
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arka Mitra | Research Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root { scroll-behavior: smooth; }
+      body { font-family: 'Inter', ui-sans-serif, system-ui; background:#f8f9fa; }
+      .section-anchor { scroll-margin-top: 6rem; }
+      .timeline-dot::before {
+        content:'';
+        position:absolute; left:-1.75rem; top:.5rem;
+        width:.75rem; height:.75rem; background:#1e40af; border-radius:9999px; border:3px solid #f8f9fa;
+      }
+    </style>
+  </head>
+  <body class="text-gray-800">
+
+    <!-- NAV -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg backdrop-blur-sm bg-opacity-95">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <!-- Brand -->
+          <a href="#hero" class="text-xl font-bold text-gray-900 hover:text-blue-700 transition">
+            Arka Mitra Portfolio
+          </a>
+
+          <!-- Menu -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="#about" class="hover:text-blue-700">About</a>
+            <a href="#resume" class="hover:text-blue-700">Resume</a>
+
+            <!-- Research w/ persistent hover dropdown -->
+            <div class="relative group" tabindex="0">
+              <button
+                class="hover:text-blue-700 inline-flex items-center gap-1 focus:outline-none"
+                aria-haspopup="true" aria-expanded="false"
+              >
+                Research
+                <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z"/></svg>
+              </button>
+              <div
+                class="absolute left-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition"
+              >
+                <div class="min-w-56 w-56 bg-white shadow-lg rounded-md border overflow-hidden">
+                  <a href="/research/ongoing" class="block px-4 py-2 hover:bg-gray-100">Ongoing Research</a>
+                  <a href="/research/past" class="block px-4 py-2 hover:bg-gray-100">Past Research</a>
+                </div>
+              </div>
+            </div>
+
+            <a
+              href={RESUME}
+              class="px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-semibold shadow hover:bg-gray-800 transition"
+            >
+              Download Resume
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="pt-16">
+
+      <!-- HERO -->
+      <section id="hero">
+        <div class="h-48 sm:h-64 w-full bg-gray-300"
+             style={`background-image:url('${COVER}'); background-size:cover; background-position:center;`}></div>
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-24 flex flex-col items-center text-center">
+          <img src={AVATAR} alt="Profile Image"
+               class="h-40 w-40 sm:h-48 sm:w-48 md:h-56 md:w-56 rounded-full border-4 border-white shadow-2xl object-cover bg-white" />
+          <!-- Name & title fully below -->
+          <h1 class="mt-6 text-3xl sm:text-4xl font-extrabold text-gray-900">Arka Mitra, Ph.D.</h1>
+          <p class="text-xl text-blue-600 font-medium mt-2">
+            Atmospheric Scientist & Remote Sensing Expert
+          </p>
+          <!-- Links below -->
+          <div class="mt-4 flex flex-wrap justify-center gap-3">
+            {SOCIAL_TABS.map((s) => (
+              <a href={s.href} target="_blank" rel="noopener"
+                 class="px-4 py-2 rounded-full bg-white border border-gray-300 text-sm font-medium hover:bg-gray-50 shadow-sm">
+                {s.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- Main container -->
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- About -->
+        <section id="about" class="section-anchor mb-12 p-8 bg-white shadow-xl rounded-xl">
+          <h2 class="text-3xl font-bold border-b-2 border-blue-200 pb-2 mb-6">About Me</h2>
+          <p class="text-lg leading-relaxed text-gray-700">
+            Atmospheric scientist with 8+ years across satellite remote sensing, boundary-layer dynamics, and wind energy applications.
+            I design end-to-end research pipelines—from algorithm development and multi-sensor data fusion to validation, uncertainty
+            quantification, and scalable geospatial modeling. My work emphasizes reproducibility (Python, CI/CD), interpretable AI/ML
+            (SOMs, gradient-boosting, deep learning), and turning large environmental datasets into actionable insights for siting,
+            forecasting, and climate process understanding.
+          </p>
+          <ul class="mt-4 grid sm:grid-cols-2 gap-3 text-gray-700">
+            <li>• Algorithm design & retrieval development</li>
+            <li>• Satellite–model fusion & evaluation</li>
+            <li>• Wind regime analysis & optimization</li>
+            <li>• Uncertainty budgets & validation</li>
+            <li>• Reproducible, production-grade workflows</li>
+            <li>• Clear technical writing & visualization</li>
+          </ul>
+        </section>
+
+        <!-- Experience & Education -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <!-- Experience -->
+          <section id="resume" class="p-8 bg-white shadow-xl rounded-xl">
+            <h2 class="text-2xl font-bold border-b-2 border-blue-200 pb-2 mb-6">Professional Experience</h2>
+            <div class="space-y-6">
+              <div>
+                <h3 class="text-xl font-semibold">Research Scientist</h3>
+                <p class="text-blue-600">University of Illinois Urbana–Champaign · Oct 2025 – Present</p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                  <li>Lead research in satellite fusion and boundary-layer dynamics; mentor students and collaborate across groups.</li>
+                </ul>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold">Postdoctoral Scientist</h3>
+                <p class="text-blue-600">Argonne National Laboratory · Mar 2023 – Sept 2025</p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                  <li>PI: benchmark dataset of PBL-height winds; offshore wind siting analytics.</li>
+                  <li>SOM-based wind regimes; MISR-ERA5 fusion; radiative flux evaluation.</li>
+                </ul>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold">Graduate Research Assistant</h3>
+                <p class="text-blue-600">2017 – 2023</p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                  <li>MISR–MODIS CTH fusion, validation vs lidar, and long-term trend analyses.</li>
+                </ul>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                  <li>Lead writer of a successful NASA Grant to operationalize MISR-MODIS fusion.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+        <!-- Education (replace existing block) -->
+        <section id="education" class="p-8 bg-white shadow-xl rounded-xl">
+          <h2 class="text-2xl font-bold border-b-2 border-blue-200 pb-2 mb-6">Education</h2>
+
+          <div class="space-y-6">
+            <!-- Ph.D. -->
+            <div class="rounded-lg border border-gray-200 p-5">
+              <div class="flex flex-wrap items-baseline gap-2">
+                <h3 class="text-xl font-semibold">Ph.D., Atmospheric Sciences</h3>
+                <span class="ml-auto text-sm text-gray-600">Aug 2017 – Feb 2023</span>
+              </div>
+              <p class="text-blue-700 font-medium mt-1">University of Illinois Urbana–Champaign · USA</p>
+              <ul class="mt-2 text-gray-700 space-y-1 list-disc list-inside">
+                <li>Advisor: <span class="font-medium">Dr. Larry Di Girolamo</span></li>
+                <li>Focus: Satellite remote sensing of Clouds</li>
+                <li>
+                  Dissertation:
+                  <a href="https://www.ideals.illinois.edu/items/127713" target="_blank" rel="noopener" class="underline">
+                    Link ↗
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- M.Sc. -->
+            <div class="rounded-lg border border-gray-200 p-5">
+              <div class="flex flex-wrap items-baseline gap-2">
+                <h3 class="text-xl font-semibold">M.Sc., Physics</h3>
+                <span class="ml-auto text-sm text-gray-600">Aug 2015 – May 2017</span>
+              </div>
+              <p class="text-blue-700 font-medium mt-1">Presidency University, Kolkata · India</p>
+              <ul class="mt-2 text-gray-700 space-y-1 list-disc list-inside">
+                <li>Thesis Focus: Ionospheric electrodynamics · Neural-network modeling</li>
+                <li>
+                  Thesis:
+                  <a href="https://github.com/mitraarka27/Master-sThesis/blob/main/Mitra_MS_Thesis.pdf" target="_blank" rel="noopener" class="underline">
+                    Link ↗
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- B.Sc. -->
+            <div class="rounded-lg border border-gray-200 p-5">
+              <div class="flex flex-wrap items-baseline gap-2">
+                <h3 class="text-xl font-semibold">B.Sc., Physics</h3>
+                <span class="ml-auto text-sm text-gray-600">Aug 2012 – May 2015</span>
+              </div>
+              <p class="text-blue-700 font-medium mt-1">Presidency University, Kolkata · India</p>
+              <ul class="mt-2 text-gray-700 space-y-1 list-disc list-inside">
+                <li>Minor: <span class="font-medium">Mathematics</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+
+
+        <!-- Recent Items -->
+        <section id="research" class="p-8 bg-white shadow-xl rounded-xl">
+          <h2 class="text-3xl font-bold border-b-2 border-blue-200 pb-2 mb-8">Recent Items</h2>
+          <div class="relative border-l-4 border-blue-400 ml-4 pl-8 space-y-12">
+            {recent.map((it) => (
+              <div class="relative timeline-dot">
+                <p class="text-sm font-semibold text-blue-700 uppercase tracking-wider">{it.tag}</p>
+                <h3 class="text-2xl font-bold mt-1">{it.title}</h3>
+                <p class="text-gray-600 italic">{it.org}</p>
+                <p class="mt-3">{it.blurb}</p>
+                <a href={it.href} class="text-blue-600 hover:text-blue-800 mt-2 inline-block font-medium">Learn more →</a>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-10">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <!-- Contact -->
+        <div>
+          <p class="text-lg font-bold mb-2">Contact</p>
+          <p>Salem, OR, USA</p>
+          <p>Official Email: <a href="mailto:arkam2@illinois.edu" class="text-blue-400 hover:text-blue-200">arkam2@illinois.edu</a></p>
+          <p>Personal Email: <a href="mailto:mitraarka27@gmail.com" class="text-blue-400 hover:text-blue-200">mitraarka27@gmail.com</a></p>
+          <p>Phone: +1 (217) 305-2998</p>
+        </div>
+        <!-- Socials right -->
+        <div class="ml-auto flex gap-6">
+          <a href="https://www.linkedin.com/in/mitra-arka/" target="_blank" class="hover:text-blue-400" aria-label="LinkedIn">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0H5C2.79 0 1 1.79 1 4v16c0 2.21 1.79 4 4 4h14c2.21 0 4-1.79 4-4V4c0-2.21-1.79-4-4-4zM8 19H5V8h3v11zM6.5 6.5C5.67 6.5 5 5.83 5 5s.67-1.5 1.5-1.5S8 4.17 8 5s-.67 1.5-1.5 1.5zM20 19h-3v-5.5c0-3.33-4-3.09-4 0V19h-3V8h3v1.67C14.4 7.1 20 7.33 20 12.96V19z"/></svg>
+          </a>
+          <a href="https://github.com/mitraarka27" target="_blank" class="hover:text-blue-400" aria-label="GitHub">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.26.79-.57v-2.1c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.73.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.1-.76.41-1.27.75-1.56-2.56-.29-5.25-1.28-5.25-5.7 0-1.26.45-2.28 1.2-3.09-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18.92-.26 1.9-.39 2.88-.39.98 0 1.96.13 2.88.39 2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.83 1.2 3.09 0 4.43-2.7 5.41-5.27 5.69.42.36.8 1.07.8 2.16v3.2c0 .31.21.68.8.57A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+          </a>
+          <a href="https://orcid.org/0000-0001-9835-7507" target="_blank" class="hover:text-blue-400" aria-label="ORCID">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+---
+import Base from "../../layouts/Base.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+
+const projects = await getCollection("projects");
+const list = projects
+  .filter(p => p.data.status === "ongoing")
+  .sort((a,b)=> b.data.date.valueOf()-a.data.date.valueOf());
+---
+<Base title="Ongoing Research" description="Current projects in satellite remote sensing, boundary-layer dynamics, and datasets.">
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <section class="mb-8 p-8 bg-white shadow-xl rounded-xl">
+      <h1 class="text-3xl font-bold border-b-2 border-blue-200 pb-2 mb-6">Ongoing Research</h1>
+      <div class="grid gap-8">
+        {list.map((e) => (
+          <ProjectCard entry={e} href={`/research/${e.slug}`} />
+        ))}
+      </div>
+    </section>
+  </main>
+</Base>

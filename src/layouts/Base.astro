@@ -1,0 +1,97 @@
+---
+import { SITE } from "../config";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  canonicalUrl?: string;
+  type?: 'website' | 'article';
+  noIndex?: boolean;
+}
+
+const {
+  title = SITE.title,
+  description = SITE.description,
+  ogImage = SITE.images.og,
+  canonicalUrl = SITE.url,
+  type = 'website',
+  noIndex = false
+} = Astro.props;
+
+const pageUrl = canonicalUrl.replace(/\/$/, '') + Astro.url.pathname;
+const twitterHandle = '@' + (new URL(SITE.author.twitter || 'https://x.com/').pathname.replace('/','') || '');
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": type === 'article' ? "Article" : "WebSite",
+  "url": pageUrl,
+  "name": title,
+  "description": description,
+  "publisher": {
+    "@type": "Person",
+    "name": SITE.author.name
+  }
+};
+---
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="canonical" href={pageUrl} />
+    <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex,nofollow" />}
+
+    <title>{title}</title>
+
+    {/* OpenGraph */}
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={ogImage} />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    {SITE.author.twitter && <meta name="twitter:site" content={twitterHandle} />}
+
+    {/* JSON-LD */}
+    <script type="application/ld+json">
+      {JSON.stringify(jsonLd)}
+    </script>
+
+    {/* Fonts & Favicon */}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon.ico" />
+
+    {/* KaTeX CSS (for SSR-rendered math on full pages) */}
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      integrity="sha384-Xi8rHCmBmhbuyyX8V3P3sSDXwo4nD8R60dVTe+zXJJTZotn/8RJT8I8G5Z1LzzZg"
+      crossOrigin="anonymous"
+    />
+
+    {/* KaTeX client auto-render for abstracts inside cards (frontmatter) */}
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+      onload={`renderMathInElement(document.body,{
+        delimiters:[
+          {left:'$$',right:'$$',display:true},
+          {left:'$',right:'$',display:false}
+        ],
+        throwOnError:false
+      });`}
+    ></script>
+  </head>
+  <body class="min-h-full">
+    <slot />
+  </body>
+</html>
