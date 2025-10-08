@@ -11,6 +11,9 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    env:
+      # default region CloudFront/ACM requires
+      AWS_REGION: us-east-1
 
     steps:
       - uses: actions/checkout@v4
@@ -26,20 +29,19 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Pick env based on event
+      # Staging on PRs
       - name: Select STAGING env (PRs)
         if: github.event_name == 'pull_request'
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_STAGING }}" >> $GITHUB_ENV
           echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_STAGING }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ secrets.AWS_REGION_STAGING }}" >> $GITHUB_ENV
 
-      - name: Select PROD env (tags v*)
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Prod on push to main or tag
+      - name: Select PROD env (push)
+        if: github.event_name == 'push'
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
           echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_PROD }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ secrets.AWS_REGION_PROD }}" >> $GITHUB_ENV
 
       - name: Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v4
@@ -48,16 +50,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      # HTML/XML/TXT short TTL
-      - name: Upload HTML/XML/TXT
+      - name: Upload HTML/XML/TXT (short cache)
         run: |
           aws s3 cp dist s3://$S3_BUCKET/ --recursive \
             --exclude "*" --include "*.html" --include "*.xml" --include "*.txt" \
             --cache-control "public, max-age=60, s-maxage=300" \
             --metadata-directive REPLACE
 
-      # Hashed assets long TTL
-      - name: Upload assets
+      - name: Upload assets (immutable long cache)
         run: |
           aws s3 cp dist s3://$S3_BUCKET/ --recursive \
             --exclude "*.html" --exclude "*.xml" --exclude "*.txt" \
