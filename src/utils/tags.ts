@@ -1,14 +1,14 @@
-// src/utils/tags.ts
 export const tagToSlug = (t: string) =>
   encodeURIComponent(
     t.trim().toLowerCase()
-      .replace(/&/g, 'and')
-      .replace(/[\/]/g, '-')       // slashes → dashes
-      .replace(/\s+/g, '-')        // spaces → dashes
-      .replace(/[^a-z0-9\-]/g, '') // strip punctuation
+      .replace(/&/g, "and")
+      .replace(/[\/]/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9\-]/g, "")
   );
 
 export const slugToTag = (slug: string, allTags: string[]) => {
   const decoded = decodeURIComponent(slug);
-  return allTags.find(t => tagToSlug(t) === decoded) ?? decoded;
+  return allTags.find((t) => tagToSlug(t) === decoded) ?? decoded;
 };
+

@@ -1,26 +1,27 @@
 ---
+// src/pages/research/[tag].astro
 import Base from "@/layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { tagToSlug, slugToTag } from "@/utils/tags";
 
-const projects = await getCollection("projects");
-
-// Unique slugs
-const allTags = Array.from(
-  new Set(projects.flatMap(p => (p.data.tags || [])))
-);
-
 export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  const tagSet = new Set<string>();
+  for (const p of projects) for (const t of (p.data.tags ?? [])) tagSet.add(t);
+  const allTags = Array.from(tagSet);
+
   return allTags.map((t) => ({
     params: { tag: tagToSlug(t) },
+    props: { allTags, originalTag: t },
   }));
 }
 
 const { tag } = Astro.params;
-const resolvedTag = slugToTag(tag, allTags);
+const { allTags } = Astro.props;
 
-// Filter projects by resolved (original) tag
-const items = projects.filter(p => (p.data.tags || []).includes(resolvedTag));
+const projects = await getCollection("projects");
+const resolvedTag = slugToTag(tag, allTags);
+const items = projects.filter((p) => (p.data.tags ?? []).includes(resolvedTag));
 ---
 
 <Base title={`Research — ${resolvedTag}`}>
