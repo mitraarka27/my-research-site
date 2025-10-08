@@ -58,7 +58,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "logs" {
     status = "Enabled"
 
     filter {
-      prefix = "" # apply to all objects
+      prefix = ""
     }
 
     transition {
@@ -249,6 +249,33 @@ resource "aws_cloudfront_cache_policy" "assets" {
   max_ttl     = 31536000
 }
 
+resource "aws_cloudfront_function" "uri_normalize" {
+  name    = "${var.project_name}-${var.env_name}-uri-normalize"
+  runtime = "cloudfront-js-1.0"
+  comment = "Map pretty URLs and extensionless paths to index.html"
+  publish = true
+  code    = <<-JS
+function handler(event) {
+  var req = event.request;
+  var uri = req.uri;
+
+  // if ends with "/", append index.html
+  if (uri.endsWith("/")) {
+    req.uri = uri + "index.html";
+    return req;
+  }
+
+  // if no file extension and not root, append "/index.html"
+  if (!uri.includes(".") && uri !== "/index.html" && uri !== "/") {
+    req.uri = uri + "/index.html";
+    return req;
+  }
+
+  return req;
+}
+JS
+}
+
 # --- CloudFront Distribution ---
 data "aws_s3_bucket" "site" {
   bucket = aws_s3_bucket.site.bucket
@@ -277,6 +304,11 @@ resource "aws_cloudfront_distribution" "this" {
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods  = ["GET", "HEAD"]
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.uri_normalize.arn
+    }
   }
 
   ordered_cache_behavior {
@@ -289,6 +321,7 @@ resource "aws_cloudfront_distribution" "this" {
 
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods  = ["GET", "HEAD"]
+    # No function association for static assets
   }
 
   dynamic "ordered_cache_behavior" {
@@ -304,11 +337,23 @@ resource "aws_cloudfront_distribution" "this" {
 
       allowed_methods = ["GET", "HEAD", "OPTIONS"]
       cached_methods  = ["GET", "HEAD"]
+
+      function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.uri_normalize.arn
+    }
     }
   }
 
   custom_error_response {
     error_code         = 404
+    response_code      = 404
+    response_page_path = "/404.html"
+  }
+
+  # Map S3 403 (private bucket missing key) to site 404
+  custom_error_response {
+    error_code         = 403
     response_code      = 404
     response_page_path = "/404.html"
   }
@@ -336,9 +381,7 @@ resource "aws_cloudfront_distribution" "this" {
   tags = local.common_tags
 }
 
-# --- S3 bucket policy for OAC ---
-data "aws_caller_identity" "current" {}
-
+# --- S3 bucket policy for OAC (only allow this distribution) ---
 resource "aws_s3_bucket_policy" "site" {
   bucket = aws_s3_bucket.site.id
 
