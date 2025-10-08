@@ -2,18 +2,17 @@ name: deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]     # deploy PROD on push to main
     tags: [ "v*" ]
   pull_request:
-    branches: [ main ]
+    branches: [ main ]     # deploy STAGING on PRs
   workflow_dispatch:
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
     env:
-      # default region CloudFront/ACM requires
-      AWS_REGION: us-east-1
+      AWS_REGION: us-east-1   # CloudFront/ACM region
 
     steps:
       - uses: actions/checkout@v4
@@ -29,16 +28,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Staging on PRs
+      # STAGING for PRs
       - name: Select STAGING env (PRs)
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_STAGING }}" >> $GITHUB_ENV
           echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_STAGING }}" >> $GITHUB_ENV
 
-      # Prod on push to main or tag
+      # PROD for push to main / tags
       - name: Select PROD env (push)
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' }}
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
           echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_PROD }}" >> $GITHUB_ENV
@@ -49,6 +48,34 @@ jobs:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Who am I
+        run: aws sts get-caller-identity
+
+      - name: Debug IDs
+        run: |
+          echo "Bucket=$S3_BUCKET"
+          echo "Distribution ID=$DISTRIBUTION_ID"
+
+      - name: Validate distribution ID
+        id: validate
+        if: ${{ env.DISTRIBUTION_ID != '' }}
+        continue-on-error: true
+        run: aws cloudfront get-distribution --id "$DISTRIBUTION_ID"
+
+      - name: Fallback: resolve CF ID by alias if missing or invalid
+        if: ${{ env.DISTRIBUTION_ID == '' || steps.validate.outcome == 'failure' }}
+        run: |
+          ALIAS="${{ github.event_name == 'pull_request' && secrets.CF_ALIAS_STAGING || secrets.CF_ALIAS_PROD }}"
+          ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${ALIAS}')].Id | [0]" \
+            --output text)
+          echo "Resolved: $ID"
+          if [ "$ID" = "None" ] || [ -z "$ID" ]; then
+            echo "Could not resolve CloudFront distribution ID for alias: $ALIAS"
+            exit 1
+          fi
+          echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
 
       - name: Upload HTML/XML/TXT (short cache)
         run: |
@@ -64,30 +91,5 @@ jobs:
             --cache-control "public, max-age=31536000, immutable" \
             --metadata-directive REPLACE
 
-      - name: Who am I
-        run: aws sts get-caller-identity
-
-      - name: Debug IDs
-        run: |
-          echo "Bucket=$S3_BUCKET"
-          echo "Distribution ID=$DISTRIBUTION_ID"
-
-      - name: Validate distribution ID
-        run: aws cloudfront get-distribution --id "$DISTRIBUTION_ID"
-
-      # OPTIONAL fallback by alias (set CF_ALIAS_PROD secret = arka-mitra-research.com)
-      - name: Fallback: resolve CF ID by alias if missing/invalid
-        if: failure() || env.DISTRIBUTION_ID == ''
-        run: |
-          ALIAS="${{ secrets.CF_ALIAS_PROD }}"
-          ID=$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${ALIAS}')].Id | [0]" \
-            --output text)
-          echo "Resolved: $ID"
-          test "$ID" != "None" -a -n "$ID"
-          echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
-
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
-              --paths "/*.html" "/index.html" "/404.html" "/sitemap*.xml" "/rss*.xml" "/robots.txt"
-
+        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*.html" "/index.html" "/404.html" "/sitemap*.xml" "/rss*.xml" "/robots.txt"
