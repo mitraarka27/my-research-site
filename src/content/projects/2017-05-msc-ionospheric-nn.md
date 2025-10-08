@@ -3,7 +3,7 @@ title: Neural Network Modeling of Ionospheric F2-Layer Electrodynamics
 date: 2018-05-05
 status: past
 tags: ["ionosphere", "machine learning", "neural networks", "space weather"]
-cover: /src/content/projects/2017-05-msc-ionospheric-nn/figure-1-global.png
+cover: /images/2017-05-msc-ionospheric-nn/figure-1-global.png
 coverCaption: >
   Spatial (longitude–latitude) distributions of NmF2 (left) and hmF2 (right)
   simulated using an ANN-based global 3D ionospheric model under quiet (Kp = 2)
@@ -37,7 +37,7 @@ This project explored that possibility.
 The core methodology was a **feed-forward artificial neural network (ANN)** trained to map observed and modeled ionospheric conditions, magnetic fields, solar activity, and winds to NmF₂ and hₘF₂.
 
 <figure class="mt-6">
-  <img src="/src/content/projects/2017-05-msc-ionospheric-nn/figure-2-model.png" alt="Neural network architecture" class="rounded-2xl" />
+  <img src="/images/2017-05-msc-ionospheric-nn/figure-2-model.png" alt="Neural network architecture" class="rounded-2xl" />
   <figcaption class="text-sm text-zinc-500 mt-2 text-center">
     <em>Architecture of the feed-forward neural network used in artificial neural network-based global three-dimensional ionospheric model. DOY = day of the year; UT = universal time. [Source: Tulasi Ram et al. (2018), Fig. 2]</em>
   </figcaption>
@@ -71,7 +71,7 @@ The core methodology was a **feed-forward artificial neural network (ANN)** trai
 - Demonstrated that **machine learning can distinguish solar irradiance vs geomagnetic forcing** through controlled ANN simulations.
 
 <figure class="mt-6">
-  <img src="/src/content/projects/2017-05-msc-ionospheric-nn/figure-3-enhancement.png" alt="Dip latitude variation and spectral analysis" class="rounded-2xl" />
+  <img ssrc="/images/2017-05-msc-ionospheric-nn/figure-3-enhancement.png" alt="Dip latitude variation and spectral analysis" class="rounded-2xl" />
   <figcaption class="text-sm text-zinc-500 mt-2 text-center">
     <em>Dip latitude variation of zonally averaged day time (a) NmF2 and (b) hmF2 as a function of day number and the corresponding [Lomb–Scargle periodogram](https://en.wikipedia.org/wiki/Lomb%E2%80%93Scargle_periodogram) of (c) NmF2 and (d) hmF2. The superimposed black curves in left panels indicate the daily averaged [Kp-index](https://en.wikipedia.org/wiki/K-index). The white curves in right panels indicate the periodogram of daily averaged Kp-index. [Source: Gowtham et al. (2019), Fig. 7]</em>
   </figcaption>
