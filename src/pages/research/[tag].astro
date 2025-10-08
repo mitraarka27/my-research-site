@@ -1,34 +1,39 @@
 ---
-import ProjectCard from "../../components/ProjectCard.astro";
+import Base from "@/layouts/Base.astro";
 import { getCollection } from "astro:content";
+import { tagToSlug, slugToTag } from "@/utils/tags";
+
+const projects = await getCollection("projects");
+
+// Unique slugs
+const allTags = Array.from(
+  new Set(projects.flatMap(p => (p.data.tags || [])))
+);
 
 export async function getStaticPaths() {
-  const entries = await getCollection("projects");
-  const tags = new Set(entries.flatMap(e => e.data.tags || []));
-  return Array.from(tags).map((t) => ({ params: { tag: t } }));
+  return allTags.map((t) => ({
+    params: { tag: tagToSlug(t) },
+  }));
 }
 
 const { tag } = Astro.params;
-const entries = await getCollection("projects");
-const list = entries
-  .filter(e => (e.data.tags || []).includes(tag!))
-  .sort((a,b)=> b.data.date.valueOf()-a.data.date.valueOf());
+const resolvedTag = slugToTag(tag, allTags);
+
+// Filter projects by resolved (original) tag
+const items = projects.filter(p => (p.data.tags || []).includes(resolvedTag));
 ---
-<!DOCTYPE html>
-<html lang="en">
-  <body class="bg-[#f8f9fa] text-gray-900">
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <section class="p-8 bg-white shadow-xl rounded-xl">
-        <h1 class="text-3xl font-bold border-b-2 border-blue-200 pb-2 mb-6">Theme: {tag}</h1>
-        <div class="grid gap-8">
-          {list.map((e) => (
-            <ProjectCard entry={e} href={`/research/${e.slug}`} />
-          ))}
-        </div>
-      </section>
-      <div class="mt-6">
-        <a href="/research" class="underline">← Back to Research</a>
-      </div>
-    </main>
-  </body>
-</html>
+
+<Base title={`Research — ${resolvedTag}`}>
+  <h1 class="text-3xl font-semibold mb-6">Tag: {resolvedTag}</h1>
+  {items.length === 0 ? (
+    <p>No projects for this tag.</p>
+  ) : (
+    <ul class="grid gap-6">
+      {items.map(({ slug, data }) => (
+        <li>
+          <a href={`/research/${slug}/`} class="underline">{data.title}</a>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>
