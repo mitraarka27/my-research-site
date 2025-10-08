@@ -2,10 +2,10 @@ name: deploy
 
 on:
   push:
-    branches: [ main ]     # deploy PROD on push to main
+    branches: [ main ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ main ]     # deploy STAGING on PRs
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -28,19 +28,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      # STAGING for PRs
+      # Select env -> export S3 bucket and initial (optional) CF distribution ID
       - name: Select STAGING env (PRs)
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_STAGING }}" >> $GITHUB_ENV
           echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_STAGING }}" >> $GITHUB_ENV
+          echo "CF_ALIAS=${{ secrets.CF_ALIAS_STAGING }}" >> $GITHUB_ENV
 
-      # PROD for push to main / tags
-      - name: Select PROD env (push)
+      - name: Select PROD env (push to main / tags)
         if: ${{ github.event_name == 'push' }}
         run: |
           echo "S3_BUCKET=${{ secrets.S3_BUCKET_PROD }}" >> $GITHUB_ENV
           echo "DISTRIBUTION_ID=${{ secrets.DISTRIBUTION_ID_PROD }}" >> $GITHUB_ENV
+          echo "CF_ALIAS=${{ secrets.CF_ALIAS_PROD }}" >> $GITHUB_ENV
 
       - name: Configure AWS creds
         uses: aws-actions/configure-aws-credentials@v4
@@ -52,30 +53,30 @@ jobs:
       - name: Who am I
         run: aws sts get-caller-identity
 
-      - name: Debug IDs
+      - name: Debug env
         run: |
           echo "Bucket=$S3_BUCKET"
-          echo "Distribution ID=$DISTRIBUTION_ID"
+          echo "Distribution ID (pre)=$DISTRIBUTION_ID"
+          echo "Alias=$CF_ALIAS"
 
-      - name: Validate distribution ID
-        id: validate
-        if: ${{ env.DISTRIBUTION_ID != '' }}
-        continue-on-error: true
-        run: aws cloudfront get-distribution --id "$DISTRIBUTION_ID"
-
-      - name: Fallback: resolve CF ID by alias if missing or invalid
-        if: ${{ env.DISTRIBUTION_ID == '' || steps.validate.outcome == 'failure' }}
+      # Resolve CF distribution ID by alias if not provided as a secret
+      - name: Ensure CloudFront distribution ID
         run: |
-          ALIAS="${{ github.event_name == 'pull_request' && secrets.CF_ALIAS_STAGING || secrets.CF_ALIAS_PROD }}"
-          ID=$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${ALIAS}')].Id | [0]" \
-            --output text)
-          echo "Resolved: $ID"
-          if [ "$ID" = "None" ] || [ -z "$ID" ]; then
-            echo "Could not resolve CloudFront distribution ID for alias: $ALIAS"
-            exit 1
+          if [ -z "${DISTRIBUTION_ID}" ]; then
+            if [ -z "${CF_ALIAS}" ]; then
+              echo "DISTRIBUTION_ID is empty and CF_ALIAS not set. Set either DISTRIBUTION_ID_* secret or CF_ALIAS_* secret."
+              exit 1
+            fi
+            ID=$(aws cloudfront list-distributions \
+              --query "DistributionList.Items[?Aliases.Quantity>0 && contains(join(',',Aliases.Items),'${CF_ALIAS}')].Id | [0]" \
+              --output text)
+            echo "Resolved ID: $ID"
+            if [ "$ID" = "None" ] || [ -z "$ID" ]; then
+              echo "Could not resolve CloudFront distribution for alias: $CF_ALIAS"
+              exit 1
+            fi
+            echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
           fi
-          echo "DISTRIBUTION_ID=$ID" >> $GITHUB_ENV
 
       - name: Upload HTML/XML/TXT (short cache)
         run: |
@@ -92,4 +93,7 @@ jobs:
             --metadata-directive REPLACE
 
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*.html" "/index.html" "/404.html" "/sitemap*.xml" "/rss*.xml" "/robots.txt"
+        run: |
+          echo "Invalidating distribution: $DISTRIBUTION_ID"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" \
+            --paths "/*.html" "/index.html" "/404.html" "/sitemap*.xml" "/rss*.xml" "/robots.txt"
